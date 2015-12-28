@@ -1,0 +1,38 @@
+{
+  "name": "rock-paper-scissors",
+  "version": "0.0.1",
+  "description": "Rock Paper Scissors",
+  "license": "MIT",
+  "author": "Arshneet Singh <arsh.johar@gmail.com>",
+  "dependencies": {
+    "jquery": "^2.1.4",
+    "react": "^0.14.3",
+    "react-dom": "^0.14.3",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "babel-jest": "^6.0.1",
+    "babel-preset-react": "^6.3.13",
+    "babelify": "^7.2.0",
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^4.0.1",
+    "grunt-contrib-cssmin": "^0.14.0",
+    "grunt-contrib-uglify": "^0.11.0",
+    "jest-cli": "^0.8.2",
+    "react-addons-test-utils": "^0.14.3"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "jest": {
+    "scriptPreprocessor": "./node_modules/babel-jest",
+    "testRunner": "./node_modules/jest-cli/src/testRunners/jasmine/jasmine2.js",
+    "unmockedModulePathPatterns": [
+      "./node_modules/react",
+      "./node_modules/react-dom",
+      "./node_modules/react-addons-test-utils",
+      "./node_modules/fbjs",
+      "./node_modules/underscore"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "firstPlayerSelection": {
+    "playerType": "HUMAN",
+    "gameOption": "SCISSORS"
+  },
+  "secondPlayerSelection": {
+    "playerType": "HUMAN",
+    "gameOption": "ROCK"
+  },
+  "gameResult": "LOSS"
+}
