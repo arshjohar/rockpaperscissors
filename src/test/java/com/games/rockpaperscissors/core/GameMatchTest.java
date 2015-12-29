@@ -73,7 +73,7 @@ public class GameMatchTest {
     }
 
     @Test
-    public void validationProducesConstraintViolationsWhenPlayerTypesForBothPlayerSelectionsAreAbsent() {
+    public void validationProducesConstraintViolationsWhenPlayerTypesForAbsentPlayerSelections() {
         final int expectedNumberOfViolations = 2;
         final GameMatch gameMatch =
                 new GameMatch(new PlayerSelection(null, null), new PlayerSelection(null, null));

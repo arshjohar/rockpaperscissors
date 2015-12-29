@@ -28,8 +28,8 @@ describe('GamePlay', function() {
   var gameOption3 = 'gameOption3';
   var gameOptions = [gameOption1, gameOption2, gameOption3];
 
-  describe('when gameMatch is not present in the state', function() {
-    it('renders a GamePlay component with the gameOptions provided in the props', function() {
+  describe('when both gameMatch or errors are not present in the state', function() {
+    it('renders a GamePlay component with the gameOptions provided in the props and a null infoDiv', function() {
       var shallowRenderer = TestUtils.createRenderer();
 
       shallowRenderer.render(
@@ -106,6 +106,7 @@ describe('GamePlay', function() {
         var gamePlayComponent = TestUtils.renderIntoDocument(
           <GamePlay gameOptions={gameOptions} />
         );
+
         gamePlayComponent.setState({gameMatch: gameMatch});
 
         var gamePlayNode = TestUtils.findRenderedComponentWithType(gamePlayComponent, Container);
@@ -125,39 +126,153 @@ describe('GamePlay', function() {
     });
   });
 
-  describe('#playMatch', function() {
-    it('sends an ajax with the playerType and gameOption in the args and sets the gameMatch in the state', function() {
-      jest.autoMockOff();
-      var GamePlay = require('../GamePlay.js'),
-        $ = require('jquery');
-      var playerType = 'HUMAN';
-      var gameMatch = buildGameMatch(gameOption1, gameOption2, 'LOSS');
-      $.ajax = jest.genMockFn().mockImpl(function() {
-        return $.Deferred().resolve(gameMatch);
-      });
-      var gamePlay = TestUtils.renderIntoDocument(
+  describe('when the errors are present in the state', function() {
+    it('renders alerts for each of the error messages', function() {
+      var gamePlayComponent = TestUtils.renderIntoDocument(
         <GamePlay gameOptions={gameOptions} />
       );
-      gamePlay.playMatch(playerType, gameOption1);
+      var errors = ['Got first error', 'Got second error'];
+      gamePlayComponent.setState({errors: errors});
 
-      expect($.ajax).toBeCalledWith({
-        type: 'POST',
-        url: '/api/gameMatches',
-        dataType: 'json',
-        contentType: 'application/json',
-        data: JSON.stringify({
-          firstPlayerSelection: {
-            playerType: playerType,
-            gameOption: gameOption1
-          },
-          secondPlayerSelection: {
-            playerType: 'COMPUTER'
-          }
-        })
+      var gamePlayNode = TestUtils.findRenderedComponentWithType(gamePlayComponent, Container);
+      var gameOptionSelectionNode = gamePlayNode.props.children[0];
+      expect(gameOptionSelectionNode.type).toEqual(GameOptionSelection);
+      expect(gameOptionSelectionNode.props.gameOptions).toEqual(gameOptions);
+      var errorAlerts = gamePlayNode.props.children[1];
+      var firstErrorAlert = errorAlerts[0];
+      expect(firstErrorAlert.type).toBe(Alert);
+      expect(firstErrorAlert.key).toBe('serverErrorAlert-0');
+      expect(firstErrorAlert.props).toEqual({alertType: 'danger', hidden: false, message: errors[0]});
+      var secondErrorAlert = errorAlerts[1];
+      expect(secondErrorAlert.type).toBe(Alert);
+      expect(secondErrorAlert.key).toBe('serverErrorAlert-1');
+      expect(secondErrorAlert.props).toEqual({alertType: 'danger', hidden: false, message: errors[1]});
+    });
+  });
+
+  describe('#playMatch', function() {
+    jest.autoMockOff();
+    var playerType = 'HUMAN';
+    var gameMatch = buildGameMatch(gameOption1, gameOption2, 'LOSS');
+
+    describe('when the ajax call to create a match is successful', function() {
+      it('sets the gameMatch to the created gameMatch and sets the errors in the state to null', function() {
+        var GamePlay = require('../GamePlay.js'),
+          $ = require('jquery');
+        $.ajax = jest.genMockFn().mockImpl(function() {
+          return $.Deferred().resolve(gameMatch);
+        });
+        var gamePlay = TestUtils.renderIntoDocument(
+          <GamePlay gameOptions={gameOptions} />
+        );
+        gamePlay.setState({errors: ['some error message']});
+
+        gamePlay.playMatch(playerType, gameOption1);
+
+        expect($.ajax).toBeCalledWith({
+          type: 'POST',
+          url: '/api/gameMatches',
+          dataType: 'json',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            firstPlayerSelection: {
+              playerType: playerType,
+              gameOption: gameOption1
+            },
+            secondPlayerSelection: {
+              playerType: 'COMPUTER'
+            }
+          })
+        });
+        expect(gamePlay.state).toEqual({
+          gameMatch: gameMatch,
+          errors: null
+        });
       });
-      expect(gamePlay.state).toEqual({
-        gameMatch: gameMatch
-      })
+    });
+
+    describe('when the ajax call to create a match fails', function() {
+      describe('and the server returns errors in an array', function() {
+        it('sets the gameMatch to null and sets the errors in the state to the errors returned', function() {
+          var GamePlay = require('../GamePlay.js'),
+            $ = require('jquery');
+          var jqXHR = {
+            responseJSON: {
+              errors: ['Got an error']
+            }
+          };
+          $.ajax = jest.genMockFn().mockImpl(function() {
+            return $.Deferred().reject(jqXHR);
+          });
+          var gamePlay = TestUtils.renderIntoDocument(
+            <GamePlay gameOptions={gameOptions} />
+          );
+          gamePlay.setState({gameMatch: gameMatch});
+
+          gamePlay.playMatch(playerType, gameOption1);
+
+          expect($.ajax).toBeCalledWith({
+            type: 'POST',
+            url: '/api/gameMatches',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+              firstPlayerSelection: {
+                playerType: playerType,
+                gameOption: gameOption1
+              },
+              secondPlayerSelection: {
+                playerType: 'COMPUTER'
+              }
+            })
+          });
+          expect(gamePlay.state).toEqual({
+            gameMatch: null,
+            errors: jqXHR.responseJSON.errors
+          });
+        });
+      });
+
+      describe('and the server returns an error as an object with error message', function() {
+        it('sets the gameMatch to null and sets the errors in the state to the error returned as an array', function() {
+          var GamePlay = require('../GamePlay.js'),
+            $ = require('jquery');
+          var jqXHR = {
+            responseJSON: {
+              message: 'Got an error with a message'
+            }
+          };
+          $.ajax = jest.genMockFn().mockImpl(function() {
+            return $.Deferred().reject(jqXHR);
+          });
+          var gamePlay = TestUtils.renderIntoDocument(
+            <GamePlay gameOptions={gameOptions} />
+          );
+          gamePlay.setState({gameMatch: gameMatch});
+
+          gamePlay.playMatch(playerType, gameOption1);
+
+          expect($.ajax).toBeCalledWith({
+            type: 'POST',
+            url: '/api/gameMatches',
+            dataType: 'json',
+            contentType: 'application/json',
+            data: JSON.stringify({
+              firstPlayerSelection: {
+                playerType: playerType,
+                gameOption: gameOption1
+              },
+              secondPlayerSelection: {
+                playerType: 'COMPUTER'
+              }
+            })
+          });
+          expect(gamePlay.state).toEqual({
+            gameMatch: null,
+            errors: [jqXHR.responseJSON.message]
+          });
+        });
+      });
     });
   });
 });

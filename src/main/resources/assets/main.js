@@ -112,6 +112,7 @@ module.exports = GameOptionSelection;
 var React = require('react'),
     ReactDOM = require('react-dom'),
     $ = require('jquery'),
+    _ = require('underscore'),
     Well = require('./Well.js'),
     Container = require('./Container.js'),
     Alert = require('./Alert.js'),
@@ -140,39 +141,46 @@ var GamePlay = React.createClass({
         }
       })
     }).done((function (gameMatch) {
-      this.setState({ gameMatch: gameMatch });
+      this.setState({ gameMatch: gameMatch, errors: null });
+    }).bind(this)).fail((function (jqXHR) {
+      this.setState({ gameMatch: null, errors: jqXHR.responseJSON.errors || [jqXHR.responseJSON.message] });
     }).bind(this));
   },
 
   render: function () {
-    var infoDiv;
-    if (this.state && this.state.gameMatch) {
-      infoDiv = React.createElement(
-        'div',
-        null,
-        React.createElement(
-          Well,
+    var infoDiv = null;
+    if (this.state) {
+      if (this.state.gameMatch) {
+        infoDiv = React.createElement(
+          'div',
           null,
-          'You selected ',
           React.createElement(
-            'strong',
+            Well,
             null,
-            this.state.gameMatch.firstPlayerSelection.gameOption
+            'You selected ',
+            React.createElement(
+              'strong',
+              null,
+              this.state.gameMatch.firstPlayerSelection.gameOption
+            ),
+            ' and the computer selected ',
+            React.createElement(
+              'strong',
+              null,
+              this.state.gameMatch.secondPlayerSelection.gameOption
+            ),
+            '.'
           ),
-          ' and the computer selected ',
-          React.createElement(
-            'strong',
-            null,
-            this.state.gameMatch.secondPlayerSelection.gameOption
-          ),
-          '.'
-        ),
-        React.createElement(Alert, { alertType: 'success', hidden: this.state.gameMatch.gameResult !== 'WIN', message: 'You won.' }),
-        React.createElement(Alert, { alertType: 'info', hidden: this.state.gameMatch.gameResult !== 'TIE', message: 'Its a tie.' }),
-        React.createElement(Alert, { alertType: 'danger', hidden: this.state.gameMatch.gameResult !== 'LOSS', message: 'You lost.' })
-      );
-    } else {
-      infoDiv = null;
+          React.createElement(Alert, { alertType: 'success', hidden: this.state.gameMatch.gameResult !== 'WIN', message: 'You won.' }),
+          React.createElement(Alert, { alertType: 'info', hidden: this.state.gameMatch.gameResult !== 'TIE', message: 'Its a tie.' }),
+          React.createElement(Alert, { alertType: 'danger', hidden: this.state.gameMatch.gameResult !== 'LOSS', message: 'You lost.' })
+        );
+      }
+      if (this.state.errors) {
+        infoDiv = _.map(this.state.errors, function (errorMsg, index) {
+          return React.createElement(Alert, { alertType: 'danger', key: 'serverErrorAlert-' + index, hidden: false, message: errorMsg });
+        });
+      }
     }
 
     return React.createElement(
@@ -186,7 +194,7 @@ var GamePlay = React.createClass({
 
 module.exports = GamePlay;
 
-},{"./Alert.js":1,"./Container.js":3,"./GameOptionSelection.js":4,"./Well.js":8,"jquery":37,"react":168,"react-dom":39}],6:[function(require,module,exports){
+},{"./Alert.js":1,"./Container.js":3,"./GameOptionSelection.js":4,"./Well.js":8,"jquery":37,"react":168,"react-dom":39,"underscore":169}],6:[function(require,module,exports){
 var React = require('react'),
     ReactDOM = require('react-dom'),
     Column = require('./Column.js');
@@ -257,17 +265,20 @@ var React = require('react'),
     $ = require('jquery'),
     ReactDOM = require('react-dom');
 
-var GamePlay = require('./components/GamePlay.js');
+var GamePlay = require('./components/GamePlay.js'),
+    Alert = require('./components/Alert.js');
 
 var renderGamePlayWithOptions = function () {
   $.get('/api/gameOptions').done(function (gameOptions) {
     return ReactDOM.render(React.createElement(GamePlay, { gameOptions: gameOptions }), document.getElementById('game_play'));
+  }).fail(function () {
+    return ReactDOM.render(React.createElement(Alert, { alertType: 'danger', hidden: false, message: 'A server error occured.' }), document.getElementById('game_play'));
   });
 };
 
 renderGamePlayWithOptions();
 
-},{"./components/GamePlay.js":5,"jquery":37,"react":168,"react-dom":39}],10:[function(require,module,exports){
+},{"./components/Alert.js":1,"./components/GamePlay.js":5,"jquery":37,"react":168,"react-dom":39}],10:[function(require,module,exports){
 (function (process){
 /**
  * Copyright 2013-2015, Facebook, Inc.

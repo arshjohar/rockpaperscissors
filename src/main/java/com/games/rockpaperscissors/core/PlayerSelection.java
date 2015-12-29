@@ -13,7 +13,7 @@ public class PlayerSelection {
     private GameOption gameOption;
 
     @JsonCreator
-    public PlayerSelection(@JsonProperty("playerType") PlayerType playerType,
+    public PlayerSelection(@JsonProperty("playerType") final PlayerType playerType,
                            @JsonProperty("gameOption") GameOption gameOption) {
         this.playerType = playerType;
         this.gameOption = gameOption;
