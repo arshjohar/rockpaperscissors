@@ -34,29 +34,6 @@ public class GameMatchTest {
     }
 
     @Test
-    public void serializesToJson() throws Exception {
-        final PlayerSelection firstPlayerSelection = new PlayerSelection(PlayerType.HUMAN, GameOption.ROCK);
-        final PlayerSelection secondPlayerSelection = new PlayerSelection(PlayerType.HUMAN, GameOption.SCISSORS);
-        final GameMatch gameMatch = new GameMatch(firstPlayerSelection, secondPlayerSelection);
-        gameMatch.setGameResult(GameResult.WIN);
-
-        String actualJson = MAPPER.writeValueAsString(gameMatch);
-
-        JsonNode actualJsonDeserialized = MAPPER.readTree(actualJson);
-        PlayerSelection deserializedFirstPlayerSelection =
-                MAPPER.treeToValue(actualJsonDeserialized.get("firstPlayerSelection"), PlayerSelection.class);
-        PlayerSelection deserializedSecondPlayerSelection =
-                MAPPER.treeToValue(actualJsonDeserialized.get("secondPlayerSelection"), PlayerSelection.class);
-        GameResult deserializedGameResult =
-                MAPPER.treeToValue(actualJsonDeserialized.get("gameResult"), GameResult.class);
-        assertThat(deserializedFirstPlayerSelection.getGameOption(), is(firstPlayerSelection.getGameOption()));
-        assertThat(deserializedFirstPlayerSelection.getPlayerType(), is(firstPlayerSelection.getPlayerType()));
-        assertThat(deserializedSecondPlayerSelection.getGameOption(), is(secondPlayerSelection.getGameOption()));
-        assertThat(deserializedSecondPlayerSelection.getPlayerType(), is(secondPlayerSelection.getPlayerType()));
-        assertThat(deserializedGameResult, is(GameResult.WIN));
-    }
-
-    @Test
     public void validationProducesConstraintViolationsForNullPlayerSelections() {
         final int expectedNumberOfViolations = 2;
         final GameMatch gameMatch = new GameMatch(null, null);

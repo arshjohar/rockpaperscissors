@@ -31,18 +31,6 @@ public class PlayerSelectionTest {
     }
 
     @Test
-    public void serializesToJson() throws Exception {
-        final PlayerSelection playerSelection =
-                new PlayerSelection(PlayerType.HUMAN, GameOption.ROCK);
-
-        final String expectedJson = MAPPER.writeValueAsString(playerSelection);
-
-        final PlayerSelection expectedJsonDeserialized = MAPPER.readValue(expectedJson, PlayerSelection.class);
-        assertThat(expectedJsonDeserialized.getPlayerType(), is(playerSelection.getPlayerType()));
-        assertThat(expectedJsonDeserialized.getGameOption(), is(playerSelection.getGameOption()));
-    }
-
-    @Test
     public void validationProducesConstraintViolationForNullPlayerType() throws Exception {
         final int expectedNumberOfViolations = 1;
         final PlayerSelection playerSelection = new PlayerSelection(null, GameOption.PAPER);

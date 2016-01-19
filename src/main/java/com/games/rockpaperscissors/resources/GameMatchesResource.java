@@ -16,9 +16,11 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 public class GameMatchesResource {
 
+    final GameResultCalculator gameResultCalculator = new GameResultCalculator();
+
     @POST
     public GameMatch create(@Valid final GameMatch gameMatch) {
-        GameResult gameResult = new GameResultCalculator().calculate(gameMatch);
+        GameResult gameResult = gameResultCalculator.calculate(gameMatch);
         gameMatch.setGameResult(gameResult);
 
         return gameMatch;
